@@ -1,5 +1,7 @@
 require('dotenv').config();
 const { Client, Events, IntentsBitField, ActivityType, GatewayIntentBits, SlashCommandBuilder, bold } = require('discord.js');
+const mongoose = require('mongoose');
+const eventHandler = require('./handlers/eventHandler');
 
 const client = new Client({
     intents: [
@@ -11,62 +13,27 @@ const client = new Client({
       ],
     });
 
-    client.on('ready', (c) => {
-        console.log(`✅ ${c.user.username} is online.`);
-
+    eventHandler(client);
 
 // SLASH COMMANDS
 
-      const ping = new SlashCommandBuilder()
-        .setName('ping')
-        .setDescription('Replies with "Pong!"');
+client.on('interactionCreate', (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
 
-      const pingCommand = ping.toJSON();
-      client.application.commands.create(pingCommand, "883363142204293150");
-      });
-      
-      client.on(Events.InteractionCreate, interaction => {
-        if(!interaction.isChatInputCommand()) return;
-        if(interaction.commandName === "ping"){
-          interaction.reply("Pong!");
-        }
+  if (interaction.commandName === 'ding') {
+    return interaction.reply('Dong!');
+  }
 
+  if (interaction.commandName === 'ping') {
+    return interaction.reply('Pong!');
+  }
 
-
-      const slay = new SlashCommandBuilder()
-        .setName('slay')
-        .setDescription('Replies with "[user] is slayingggggggggggggggggg!"');
-
-      const slayCommand = slay.toJSON();
-      client.application.commands.create(slayCommand, "883363142204293150");
-      });
-
-      client.on(Events.InteractionCreate, interaction => {
-        if(!interaction.isChatInputCommand()) return;
-        if(interaction.commandName === "slay"){
-          let user = interaction.options.getUser('user') || interaction.user; 
+  if (interaction.commandName === 'slay') {
+    let user = interaction.options.getUser('user') || interaction.user; 
           
-          interaction.reply(`${user.username} is slayingggggggggggggggggg!`);
-        }
-
-
-
-      const ding = new SlashCommandBuilder()
-        .setName('ding')
-        .setDescription('Replies with "Dong!"');
-
-      const dingCommand = ding.toJSON();
-      client.application.commands.create(dingCommand, "883363142204293150");
-      });
-
-      client.on(Events.InteractionCreate, interaction => {
-        if(!interaction.isChatInputCommand()) return;
-        if(interaction.commandName === "ding"){
-          interaction.reply("Dong!");
-        }
-      });
-
-
+    interaction.reply(`${user.username} is slayingggggggggggggggggg!`);
+  }
+});
 
 // MESSAGES
 
