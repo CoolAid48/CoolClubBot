@@ -1,3 +1,1 @@
-My personal brainchild that I wanted to share with the public!
-
-Basic Discord Bot for the CoolAid Community Discord Server :D
+Welcome to my personal brainchild that I wanted to share with the public! I made a basic Discord Bot for the Community Discord Server in discord.js... Shoutout to Under Ctrl and MrJAwesome for the basic tutorials
