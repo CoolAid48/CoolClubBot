@@ -1,1 +1,1 @@
-Welcome to my personal brainchild that I wanted to share with the public! I made a basic Discord Bot for the Community Discord Server using node.js... Shoutout to Under Ctrl and MrJAwesome for the basic tutorials
+Welcome to my personal brainchild that I wanted to share with the public! I made a basic Discord Bot for my Community Discord Server using node.js... Shoutout to Under Ctrl, MrJAwesome, and Golden Development for the basic tutorials!
