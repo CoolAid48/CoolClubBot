@@ -1,89 +1,110 @@
 require('dotenv').config();
-const { Client, Events, IntentsBitField, ActivityType, GatewayIntentBits, SlashCommandBuilder, bold } = require('discord.js');
+const { Client, Collection, Events, IntentsBitField, PermissionsBitField, ActivityType, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const mongoose = require('mongoose');
-const eventHandler = require('./handlers/eventHandler');
+const { QuickDB } = require('quick.db')
+const db = new QuickDB();
+const fs = require('fs');
+const axios = require('axios');
 
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMessages,
         IntentsBitField.Flags.Guilds,
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessages,
         IntentsBitField.Flags.MessageContent,
-      ],
+        ],
     });
 
-    eventHandler(client);
+    client.commands = new Collection();
+    client.prefix = new Map();
+    
+    const prefixFolders = fs.readdirSync("./src/commands/prefix").filter((f) => f.endsWith(".js"));
+    
+    for (arx of prefixFolders) {
+      const Cmd = require('./commands/prefix/' + arx)
+      client.prefix.set(Cmd.name, Cmd)
+    }
+    
 
-// SLASH COMMANDS
+// BOT AND DATABASE CONNECTIONS
 
-client.on('interactionCreate', (interaction) => {
-  if (!interaction.isChatInputCommand()) return;
+    (async () => {
+      try {
+        await mongoose.connect(process.env.MONGODB_URI);
+      console.log('🛜  Connected to database!')
+    
+      } catch (error) {
+        console.log(`Mongoose Error: ${error}`);
+      }
+    })();
 
-  if (interaction.commandName === 'ding') {
-    return interaction.reply('Dong!');
-  }
+client.once(Events.ClientReady, c => {
+  console.log(`✅ ${client.user.username} is online!`);
+});
 
-  if (interaction.commandName === 'ping') {
-    return interaction.reply('Pong!');
-  }
+client.login(process.env.TOKEN);
 
-  if (interaction.commandName === 'slay') {
-    let user = interaction.options.getUser('user') || interaction.user; 
-          
-    interaction.reply(`${user.username} is slayingggggggggggggggggg!`);
+
+
+// Prefix COMMANDS
+
+client.on('messageCreate', async message => {
+  const prefix = "!";
+  
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const command = args.shift().toLowerCase();
+  const prefixcmd = client.prefix.get(command);
+  if (prefixcmd) {
+    prefixcmd.run(client, message, args)
   }
 });
 
-// MESSAGES
-
-      client.on('messageCreate', (message) => {
-        if (message.author.bot) {
-            return;
-      }
-    
-      if (message.content === 'hello') {
-        message.reply('Hello World! I am still in development and cannot interact with messages other than this simple "hello". One day, I will take over the roles of Carl-Bot and MEE6 and put them out of a job!');
-      }
-    });
 
 
-    
+// First Message peepoWish
+
+client.on('messageCreate', (message) => {
+  if (message.author.bot) {
+      return;
+}
+
+if (message.content === 'hello') {
+  message.reply('Hello World! I am still in development, but will soon be taking over the jobs of Carl-bot and Mee6, so be on the lookout! <:binoculars:1267649939941363773>');
+}
+});
+
 // CUSTOM BOT STATUS + 10 SECOND INTERVAL
 
-      let status = [
-        {
-          name: '24/7 CoolAid VODs',
-          type: ActivityType.Streaming,
-          url: 'https://www.twitch.tv/coolaid48',
-        },
-        {
-          name: 'Definitely Mod of the Month',
-          type: ActivityType.Custom
-        },
-        {
-          name: 'over the CoolClub',
-          type: ActivityType.Watching,
-        },
-        {
-          name: 'Shorter than Linkzzey',
-          type: ActivityType.Custom,
-        },
-        {
-          name: 'Son of CoolAid48',
-          type: ActivityType.Custom,
-        },
-      ];
-    
-    setInterval(() => {
-        let random = Math.floor(Math.random() * status.length);
-        client.user.setActivity(status[random]);
-      }, 10000);
+let status = [
+  {
+    name: '24/7 CoolAid VODs',
+    type: ActivityType.Streaming,
+    url: 'https://www.twitch.tv/coolaid48',
+  },
+  {
+    name: 'Definitely Mod of the Month',
+    type: ActivityType.Custom
+  },
+  {
+    name: 'over the CoolClub',
+    type: ActivityType.Watching,
+  },
+  {
+    name: 'Shorter than Linkzzey',
+    type: ActivityType.Custom,
+  },
+  {
+    name: 'Son of CoolAid48',
+    type: ActivityType.Custom,
+  },
+];
 
-
-
-// BOT TOKEN KEY
-
-    client.login(process.env.TOKEN);
-        
-
+setInterval(() => {
+  let random = Math.floor(Math.random() * status.length);
+  client.user.setActivity(status[random]);
+}, 10000);

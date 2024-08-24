@@ -10,8 +10,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "axios": "^1.7.5",
+    "better-sqlite3": "^11.2.1",
     "discord.js": "^14.15.3",
     "dotenv": "^16.4.5",
-    "mongoose": "^8.5.3"
+    "mongoose": "^8.5.4",
+    "node.fs": "^1.0.2",
+    "node.js": "^0.0.1-security",
+    "quick.db": "^9.1.7"
   }
 }
