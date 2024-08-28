@@ -6,6 +6,7 @@ const db = new QuickDB();
 const fs = require('node:fs');
 const path = require('node:path');
 const axios = require('axios');
+const eventHandler = require('./handlers/eventHandler');
 
 const client = new Client({
     intents: [
@@ -16,6 +17,7 @@ const client = new Client({
         IntentsBitField.Flags.Guilds,
         IntentsBitField.Flags.GuildMembers,
         IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.GuildPresences,
         IntentsBitField.Flags.MessageContent,
         ],
     });
@@ -36,33 +38,18 @@ const client = new Client({
 
     (async () => {
       try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        await mongoose.connect(process.env.MONGODB_URI)
       console.log('🛜  Connected to database!')
     
+      eventHandler(client);
+      
+      client.login(process.env.TOKEN);
       } catch (error) {
-        console.log(`Mongoose Error: ${error}`);
+        console.log(`DB Error: ${error}`);
       }
     })();
 
-    
-
-client.login(process.env.TOKEN);
-
-// Event Handlers
-
-const eventsPath = path.join(__dirname, 'events');
-const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
-
-for(const file of eventFiles){
-  const filePath = path.join(eventsPath, file);
-  const event = require(filePath);
-  if(event.once) {
-    client.once(event.name, (...args) => event.execute(...args));
-  } else {
-    client.on(event.name, (...args) => event.execute(...args));
-  }
-}
-
+  
 // Prefix COMMANDS
 
 client.on('messageCreate', async message => {
