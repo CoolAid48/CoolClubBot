@@ -1,5 +1,5 @@
 const path = require('path');
-const getAllFiles = require('./getAllFiles');
+const getAllFiles = require('../utils/getAllFiles');
 
 module.exports = (exceptions = []) => {
   let localCommands = [];
