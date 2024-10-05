@@ -355,3 +355,37 @@ client.on('messageReactionRemove', async (reaction, user) => {
       }
   }
 });
+
+
+
+// Logged Events
+
+// Function to send an embed to the log channel
+const sendLogEmbed = async (logChannel, title, description, color) => {
+  const embed = new EmbedBuilder()
+      .setTitle(title)
+      .setDescription(description)
+      .setColor(color)
+      .setTimestamp();
+  
+  await logChannel.send({ embeds: [embed] });
+};
+
+
+// Log bans
+client.on('guildBanAdd', async (guild, user) => {
+  const logChannel = guild.channels.cache.find(channel => channel.id === '1291519148958158848'); // Change to your logging channel name
+  if (logChannel) {
+      const description = `**${user.tag}** has been banned from the server.`;
+      await sendLogEmbed(logChannel, 'User Banned', description, '#FF0000'); // Red for bans
+  }
+});
+
+// Log unbans (optional)
+client.on('guildBanRemove', async (guild, user) => {
+  const logChannel = guild.channels.cache.find(channel => channel.id === '1291519148958158848'); // Change to your logging channel name
+  if (logChannel) {
+      const description = `**${user.tag}** has been unbanned from the server.`;
+      await sendLogEmbed(logChannel, 'User Unbanned', description, '#00FF00'); // Green for unbans
+  }
+});
