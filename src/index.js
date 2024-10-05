@@ -1,10 +1,11 @@
 require('dotenv').config();
-const { Client, Collection, Events, IntentsBitField, ActivityType, GatewayIntentBits, Partials, EmbedBuilder } = require('discord.js');
+const { Client, Collection, Events, IntentsBitField, ActivityType, GatewayIntentBits, EmbedBuilder, Partials, AttachmentBuilder, Message } = require('discord.js');
 const mongoose = require('mongoose');
 const { QuickDB } = require('quick.db');
 const db = new QuickDB();
-const fs = require('node:fs');
+const fs = require('fs');
 const path = require('node:path');
+const axios = require('axios');
 const eventHandler = require('./handlers/eventHandler');
 
 const client = new Client({
@@ -61,11 +62,43 @@ const client = new Client({
                   }
               }
           });
+          
+          // Command collections
+client.commands = new Collection();
+client.prefix = new Map();
+
+// Load prefix commands
+const prefixFolders = fs.readdirSync("./src/commands/prefix").filter(f => f.endsWith(".js"));
+for (const file of prefixFolders) {
+  const Cmd = require(`./commands/prefix/${file}`);
+  client.prefix.set(Cmd.name, Cmd);
+}
+
+// Handle messages
+client.on('messageCreate', async (message) => {
+  const prefix = "!";
+  
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
+  
+  const args = message.content.slice(prefix.length).trim().split(/ +/);
+  const commandName = args.shift().toLowerCase();
+  
+  const prefixcmd = client.prefix.get(commandName);
+  if (prefixcmd) {
+    try {
+      await prefixcmd.run(client, message, args); // Call the command's run function
+    } catch (error) {
+      console.error(error);
+      await message.reply('There was an error executing that command.');
+    }
+  }
+});
         }).catch(console.error);
     } catch (error) {
         console.log(`DB Error: ${error}`);
     }    
 })();
+
 
 
   // Event Handlers
@@ -82,30 +115,6 @@ for(const file of eventFiles){
     client.on(event.name, (...args) => event.execute(...args));
   }
 }
-
-// Prefix COMMANDS
-
-client.on('messageCreate', async message => {
-  const prefix = "!";
-  
-  if (!message.content.startsWith(prefix) || message.author.bot) return;
-  const args = message.content.slice(prefix.length).trim().split(/ +/);
-  const command = args.shift().toLowerCase();
-  const prefixcmd = client.prefix.get(command);
-  if (prefixcmd) {
-    prefixcmd.run(client, message, args)
-  }
-});
-
-client.commands = new Collection();
-    client.prefix = new Map(); 
-    
-    const prefixFolders = fs.readdirSync("./src/commands/prefix").filter((f) => f.endsWith(".js"));
-    
-    for (arx of prefixFolders) {
-      const Cmd = require('./commands/prefix/' + arx)
-      client.prefix.set(Cmd.name, Cmd)
-    }
 
 // Message Commands peepoWish
 
@@ -353,5 +362,39 @@ client.on('messageReactionRemove', async (reaction, user) => {
               console.error('Error removing role:', error);
           }
       }
+  }
+});
+
+
+
+// Logged Events
+
+// Function to send an embed to the log channel
+const sendLogEmbed = async (logChannel, title, description, color) => {
+  const embed = new EmbedBuilder()
+      .setTitle(title)
+      .setDescription(description)
+      .setColor(color)
+      .setTimestamp();
+  
+  await logChannel.send({ embeds: [embed] });
+};
+
+
+// Log bans
+client.on('guildBanAdd', async (guild, user) => {
+  const logChannel = guild.channels.cache.find(channel => channel.id === '1291519148958158848'); // Change to your logging channel name
+  if (logChannel) {
+      const description = `**${user.tag}** has been banned from the server.`;
+      await sendLogEmbed(logChannel, 'User Banned', description, '#FF0000'); // Red for bans
+  }
+});
+
+// Log unbans (optional)
+client.on('guildBanRemove', async (guild, user) => {
+  const logChannel = guild.channels.cache.find(channel => channel.id === '1291519148958158848'); // Change to your logging channel name
+  if (logChannel) {
+      const description = `**${user.tag}** has been unbanned from the server.`;
+      await sendLogEmbed(logChannel, 'User Unbanned', description, '#00FF00'); // Green for unbans
   }
 });
