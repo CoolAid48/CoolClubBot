@@ -7,6 +7,9 @@ const fs = require('fs');
 const path = require('node:path');
 const axios = require('axios');
 const eventHandler = require('./handlers/eventHandler');
+const express = require('express');
+const bodyParser = require('body-parser');
+const readline = require('readline');
 
 const client = new Client({
     intents: [
@@ -20,6 +23,15 @@ const client = new Client({
     disableEveryone: true,
     partials : [Partials.Message, Partials.Channel, Partials.Reaction]
 });
+
+const discordWebhook = new WebhookClient({url:`https://discord.com/api/webhooks/1311508868219801661/NYqjdAgbZM-UUdsgIv26AkctFYR2eUj5gcvqUy6KT0SyLP0preIY80jYngBOjDzcOKwL`});
+const app = express();
+app.use(bodyParser.json());
+
+const PORT = 3000;
+
+// Map for social media feeds
+const socialFeeds = {};
 
 // BOT AND DATABASE CONNECTIONS
 (async () => {
@@ -320,9 +332,11 @@ client.on('messageReactionRemove', async (reaction, user) => {
 
 // NOTIFICATIONS
 const notifroleMap = {
-  '1059660582107742279': '1059659428896456777', // TwitchSquad emoji ID to role ID
-  '1059660273306308701': '1059659245278199889', // YoutubeSquad emoji ID to role ID
-  '1289753113489838112': '1162888442871562250', // DiscordSquad emoji ID to role ID
+  '1059660582107742279': '1059659428896456777', // Twitch Live emoji ID to role ID
+  '1289753113489838112': '1162888442871562250', // Discord Events emoji ID to role ID
+  '1059660273306308701': '1312243639866363986', // Shorts/TikToks emoji ID to role ID
+  '1312237276226523166': '1312237678678511616', // X(Twitter)/Bluesky emoji ID to role ID
+  '1312237556057767957': '1312238092697997364', // Instagram emoji ID to role ID
 };
 
 client.on('messageReactionAdd', async (reaction, user) => {
