@@ -1,9 +1,10 @@
 module.exports = {
     name: 'guildMemberAdd',
     async execute(member) {
+        /*
         const welcomeRole = await member.guild.roles.cache.find(role => role.id === '919711530428289064');
         await member.roles.add(welcomeRole);
-        
+        */
         const rankRole = await member.guild.roles.cache.find(role => role.id === '1289776885810855968');
         await member.roles.add(rankRole);
         const miscRole = await member.guild.roles.cache.find(role => role.id === '1289775915957751811');
