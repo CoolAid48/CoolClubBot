@@ -3,7 +3,7 @@ module.exports = {
   description: `Replies with "!rules"`,
   
     run: async (client, message, args) => {
-    message.reply(`<#927239577331183658>  <:nerdge:1276986587590164490>`)
+    message.reply(`Check out the rules here: <#927239577331183658>!  <:nerdge:1276986587590164490>`)
     }
   }
   
