@@ -1,0 +1,5 @@
+.vscode
+.env
+config.json
+node_modules
+discloud.config
