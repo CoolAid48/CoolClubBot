@@ -142,134 +142,25 @@ if (message.content === 'hello') {
     url: 'https://www.twitch.tv/coolaid48',
   },
   {
-    name: 'Definitely Mod of the Month',
-    type: ActivityType.Custom
+    name: '"Mod of the Month"',
+    type: ActivityType.Streaming,
+    url: 'https://www.twitch.tv/coolaid48',  },
+  {
+    name: 'eyes on the CoolClub',
+    type: ActivityType.Streaming,
+    url: 'https://www.twitch.tv/coolaid48',
   },
   {
-    name: 'Watching over the CoolClub',
-    type: ActivityType.Custom
-
-  },
-  {
-    name: 'Shorter than Linkzzey',
-    type: ActivityType.Custom
-
-  },
-  {
-    name: 'Son of CoolAid48',
-    type: ActivityType.Custom
+    name: 'shorter than Linkzzey',
+    type: ActivityType.Streaming,                           
+    url: 'https://www.twitch.tv/coolaid48',
   },
 ];
 
 setInterval(() => {
   let random = Math.floor(Math.random() * status.length);
   client.user.setActivity(status[random]);
-}, 60000);
-
-
-
-// REACTION ROLE - Verification
-
-client.on('messageCreate', async (message) => {
-  const channelId = '927239577331183658'; // Replace with your channel ID
-  const channel = await client.channels.fetch(channelId);
-  
-  if (message.content === '!verifyRoles') {
-    const embed = new EmbedBuilder()
-      .setTitle('DISCORD SERVER RULES')
-      .setDescription('\n• Respect the staff and especially each other. Use common sense, obey Discord TOS, listen to the mods, and don\'t be stupid\n\n• Keep all channels English only\n\n• Do not directly discuss your age\n\n• All forms of racism, homophobia, xenophobia, sexism, or any other hate towards others is never tolerated and will result in an instant ban. This server doesn\'t promote harassment or bullying\n\n• Do not self promote anywhere in the server; this includes talking about your content, channels, or asking for streaming advice\n\n• No discussions about politics, religion, or other topics that can be considered controversial\n\n• Please do not share personal information, both in this server or in DMs, whether you care personally or not\n\n• No NSFW stuff at all, and no EXCESSIVE swearing\n\n• Do not spam/flood chat, write a message out fully. Do not spam ping anybody\n\n• Absolutely no asking for gifted subs or roles, and do not ask why other people have roles that you do not')
-      .setThumbnail('https://media.discordapp.net/attachments/919278682806296596/1301339454203760670/mod.png?ex=6781b8cf&is=6780674f&hm=dcedae9a74b2d8148c5f1a38ed92e61627ec277c14353ffc8b3678892ced2085&=&format=webp&quality=lossless')
-      .setColor('#0070e9')
-      .setFooter({
-        text: 'Violation of the rules can result in any punishment from a short mute to a permanent ban. Follow the rules, and you\'ll be fine. Have fun exploring the server and welcome to the Club!',
-        iconURL: 'https://media.discordapp.net/attachments/919278682806296596/1301339454455283744/partner.png?ex=6781b8cf&is=6780674f&hm=f7c597ff6d852109ff1d6bc945d67a6b87c45b05fcbd9152143b782b1b1f3497&=&format=webp&quality=lossless',
-      });
-
-    const sentMessage = await channel.send({ embeds: [embed] });
-    await sentMessage.react('1292293381829169172'); // Use the correct custom emoji ID here
-  }
-});
-
-// PRONOUNS
-const verifyRoleMap = {
-  '1292293381829169172': '919711530428289064', // Custom emoji ID mapped to role ID
-};
-
-client.on('messageReactionAdd', async (reaction, user) => {
-  if (reaction.partial) await reaction.fetch();
-  if (reaction.message.partial) await reaction.message.fetch();
-  if (user.bot || !reaction.message.guild) return;
-
-  // Only check custom emojis by ID
-  if (reaction.message.embeds.length > 0 && reaction.message.embeds[0].title === 'DISCORD SERVER RULES') {
-    const roleId = verifyRoleMap[reaction.emoji.id];
-    if (roleId) {
-      try {
-        const member = await reaction.message.guild.members.fetch(user.id);
-        await member.roles.add(roleId);
-      } catch (error) {
-        console.error('Error adding role:', error);
-      }
-    }
-  }
-});
-
-client.on('messageReactionRemove', async (reaction, user) => {
-  if (reaction.partial) await reaction.fetch();
-  if (reaction.message.partial) await reaction.message.fetch();
-  if (user.bot || !reaction.message.guild) return;
-
-  // Only check custom emojis by ID
-  if (reaction.message.embeds.length > 0 && reaction.message.embeds[0].title === 'DISCORD SERVER RULES') {
-    const roleId = verifyRoleMap[reaction.emoji.id];
-    if (roleId) {
-      try {
-        const member = await reaction.message.guild.members.fetch(user.id);
-        await member.roles.remove(roleId);
-      } catch (error) {
-        console.error('Error removing role:', error);
-      }
-    }
-  }
-});
-
-
-
-// Logged Events
-
-// Function to send an embed to the log channel
-const sendLogEmbed = async (logChannel, title, description, color) => {
-  const embed = new EmbedBuilder()
-      .setTitle(title)
-      .setDescription(description)
-      .setColor(color)
-      .setTimestamp();
-  
-  await logChannel.send({ embeds: [embed] });
-};
-
-
-// Log bans
-client.on('guildBanAdd', async (guild, user) => {
-  const logChannel = guild.channels.cache.find(channel => channel.id === '1291519148958158848'); // Change to your logging channel name
-  if (logChannel) {
-      const description = `**${user.tag}** has been banned from the server.`;
-      await sendLogEmbed(logChannel, 'User Banned', description, '#FF0000'); // Red for bans
-  }
-});
-
-// Log unbans (optional)
-client.on('guildBanRemove', async (guild, user) => {
-  const logChannel = guild.channels.cache.find(channel => channel.id === '1291519148958158848'); // Change to your logging channel name
-  if (logChannel) {
-      const description = `**${user.tag}** has been unbanned from the server.`;
-      await sendLogEmbed(logChannel, 'User Unbanned', description, '#00FF00'); // Green for unbans
-  }
-});
-
-
-
-
+}, 15000);
 
 // SEND MESSAGES AS THE BOT
 
@@ -376,85 +267,10 @@ client.on('messageReactionAdd', async (reaction, user) => {
     }
 });
 
-
-
-
-
-
-
-
 const app = express();
 app.use(express.json());
-
-const DISCORD_WEBHOOK_URL = "YOUR_DISCORD_WEBHOOK_URL";
-
-app.post("/fourthwall-webhook", async (req, res) => {
-  console.log("Received Webhook:", req.body); // Debugging
-  const order = req.body;
-
-  if (!order.customer || !order.items) {
-      console.log("Webhook payload is missing expected properties!");
-      return res.status(400).send("Invalid webhook payload");
-  }
-
-  const message = {
-      content: `📦 **New Order Received!**\n
-      **Customer:** ${order.customer.name}\n
-      **Items:** ${order.items.map(i => `${i.name} (x${i.quantity})`).join(", ")}\n
-      **Total:** $${order.total}\n
-      **Order ID:** ${order.id}`
-  };
-
-  try {
-      await axios.post(DISCORD_WEBHOOK_URL, message);
-      console.log("Sent message to Discord");
-      res.status(200).send("Sent to Discord");
-  } catch (error) {
-      console.error("Error sending to Discord:", error);
-      res.status(500).send("Error");
-  }
-});
-
 
 // Start servers
 app.listen(process.env.PORT || 3000, () => 
   console.log(`🌐 Webhook server running!\n Port: ${process.env.PORT || 3000}`)
 );
-
-// TIMEOUT LOGIC
-
-const mutedRoleId = '1348768565259403356';
-
-client.on('guildMemberUpdate', async (oldMember, newMember) => {
-    try {
-        // Check if timeout status changed
-        if (oldMember.communicationDisabledUntilTimestamp === newMember.communicationDisabledUntilTimestamp) return;
-
-        const hadTimeout = oldMember.communicationDisabledUntilTimestamp > Date.now();
-        const hasTimeout = newMember.communicationDisabledUntilTimestamp > Date.now();
-
-        // Get the muted role
-        const mutedRole = newMember.guild.roles.cache.get(mutedRoleId);
-        if (!mutedRole) {
-            console.error('Muted role not found');
-            return;
-        }
-
-        // Add/remove role based on timeout status
-        if (hasTimeout && !hadTimeout) {
-            // Timeout was applied
-            if (!newMember.roles.cache.has(mutedRoleId)) {
-                await newMember.roles.add(mutedRole);
-                console.log(`Added muted role to ${newMember.user.tag}`);
-            }
-        } else if (!hasTimeout && hadTimeout) {
-            // Timeout was removed
-            if (newMember.roles.cache.has(mutedRoleId)) {
-                await newMember.roles.remove(mutedRole);
-                console.log(`Removed muted role from ${newMember.user.tag}`);
-            }
-        }
-    } catch (error) {
-        console.error('Error handling timeout role update:', error);
-    }
-});

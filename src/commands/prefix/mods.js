@@ -1,8 +1,8 @@
 module.exports = {
     name: 'mods',
-    description: 'Replies with "!mods"',
+    description: 'Replies with a link to Coolaid\'s mods list',
     
     run: async (client, message, args) => {
-        message.reply("You can find the list of all of CoolAid's mods and resource packs [here!](<https://coolaid.live/pages/mods-packs-list>)")
+        message.reply("You can find Coolaid's full list of packs and mods he uses [here](https://coolaid.live/pages/mods-packs-list)")
     }
 }

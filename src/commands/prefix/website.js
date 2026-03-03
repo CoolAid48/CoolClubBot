@@ -1,8 +1,8 @@
 module.exports = {
   name: 'website',
-  description: 'Replies with "!website"',
+  description: 'Replies with a link to CoolAid\'s website home page',
   
   run: async (client, message, args) => {
-      message.reply("CoolAid has a website! Check out BRAND NEW MERCH, informational pages, and more here! <a:JAM:1256258144632307784> <https://coolaid.live>")
+      message.reply("Check out CoolAid's website here: <https://coolaid.live> <a:JAM:1256258144632307784>")
   }
 }
