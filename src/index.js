@@ -8,7 +8,7 @@ const registerPrefixCommands = require('./features/prefixCommands');
 const registerPresenceLiveRole = require('./features/presenceLiveRole');
 const registerMessageReplies = require('./features/messageReplies');
 const startBotStatus = require('./features/botStatus');
-const registerterminalMessenger = require('./features/terminalMessenger');
+const registerTerminalMessenger = require('./features/terminalMessenger');
 const registerStarboard = require('./features/starboard');
 
 const client = new Client({
@@ -32,9 +32,9 @@ const client = new Client({
     eventHandler(client);
     registerPrefixCommands(client);
     registerPresenceLiveRole(client);
-    registermessageReplies(client);
+    registerMessageReplies(client);
     registerStarboard(client);
-    registerStdinMessenger(client);
+    registerTerminalMessenger(client);
 
     await client.login(process.env.TOKEN);
     console.log(`✅ ${client.user.username} is online.`);
@@ -45,7 +45,7 @@ const client = new Client({
       return;
     }
 
-    startStatusRotation(client);
+    startBotStatus(client);
   } catch (error) {
     console.error(`Startup error: ${error}`);
   }

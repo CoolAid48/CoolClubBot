@@ -1,4 +1,7 @@
 module.exports = (existingCommand, localCommand) => {
+  const getMinValue = (option) => option.min_value ?? option.minValue ?? null;
+  const getMaxValue = (option) => option.max_value ?? option.maxValue ?? null;
+
   const areChoicesDifferent = (existingChoices, localChoices) => {
     for (const localChoice of localChoices) {
       const existingChoice = existingChoices?.find(
@@ -29,13 +32,22 @@ module.exports = (existingCommand, localCommand) => {
       if (
         localOption.description !== existingOption.description ||
         localOption.type !== existingOption.type ||
-        (localOption.required || false) !== existingOption.required ||
+        (localOption.required || false) !==
+          (existingOption.required || false) ||
         (localOption.choices?.length || 0) !==
           (existingOption.choices?.length || 0) ||
         areChoicesDifferent(
-          localOption.choices || [],
-          existingOption.choices || []
-        )
+          existingOption.choices || [],
+          localOption.choices || []
+        ) ||
+        (localOption.options?.length || 0) !==
+          (existingOption.options?.length || 0) ||
+        areOptionsDifferent(
+          existingOption.options || [],
+          localOption.options || []
+        ) ||
+        getMinValue(localOption) !== getMinValue(existingOption) ||
+        getMaxValue(localOption) !== getMaxValue(existingOption)
       ) {
         return true;
       }
@@ -46,7 +58,7 @@ module.exports = (existingCommand, localCommand) => {
   if (
     existingCommand.description !== localCommand.description ||
     existingCommand.options?.length !== (localCommand.options?.length || 0) ||
-    areOptionsDifferent(existingCommand.options, localCommand.options || [])
+    areOptionsDifferent(existingCommand.options || [], localCommand.options || [])
   ) {
     return true;
   }
