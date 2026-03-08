@@ -1,6 +1,6 @@
 const { ActivityType } = require('discord.js');
 
-// CUSTOM BOT STATUS + 15 SECOND INTERVAL
+// CUSTOM BOT STATUS + 60 SECOND INTERVAL
 module.exports = (client) => {
   const statuses = [
     {
@@ -28,5 +28,5 @@ module.exports = (client) => {
   setInterval(() => {
     const random = Math.floor(Math.random() * statuses.length);
     client.user.setActivity(statuses[random]);
-  }, 15000);
+  }, 60000);
 };

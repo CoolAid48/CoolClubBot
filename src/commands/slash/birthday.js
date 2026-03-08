@@ -17,7 +17,8 @@ const MONTH_CHOICES = [
 ];
 
 function daysInMonth(month) {
-  return new Date(2026, month, 0).getDate();
+  // Use 2024 as the reference so Feb 29 can be registered since it's a leap year
+  return new Date(2024, month, 0).getDate();
 }
 
 function getFooterText() {
@@ -27,18 +28,9 @@ function getFooterText() {
   const day = now.getDate();
   const year = now.getFullYear();
 
-  let hour = now.getHours();
-  const minute = String(now.getMinutes()).padStart(2, '0');
-  const period = hour >= 12 ? 'PM' : 'AM';
+  const timestamp = `${month}/${day}/${year}`;
 
-  hour = hour % 12;
-  if (hour === 0) {
-    hour = 12;
-  }
-
-  const timestamp = `${month}/${day}/${year} ${hour}:${minute} ${period}`;
-
-  return `CoolClubBot Birthdays • ${timestamp}`;
+  return `Birthdays • ${timestamp}`;
 }
 
 function ordinal(n) {

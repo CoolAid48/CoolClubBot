@@ -8,7 +8,7 @@
 
 - Welcoming system where new members will be welcomed by the bot in the #welcomes channel upon joining the server.
 
-- Randomized status of 4 options for the bot on a 15-second interval for some "personality".
+- Randomized status of 4 options for the bot on a 60-second interval for some "personality".
 
 - Simple message command where typing "hello" will prompt the bot to respond with a little message!
 
