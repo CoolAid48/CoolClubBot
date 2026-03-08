@@ -24,13 +24,11 @@ function daysInMonth(month) {
 function getFooterText() {
   const now = new Date();
 
-  const month = now.getMonth() + 1;
+  const monthName = now.toLocaleString('en-US', { month: 'long' });
   const day = now.getDate();
   const year = now.getFullYear();
 
-  const timestamp = `${month}/${day}/${year}`;
-
-  return `Birthdays • ${timestamp}`;
+  return `Birthdays • ${monthName} ${ordinal(day)}, ${year}`;
 }
 
 function ordinal(n) {
@@ -137,7 +135,6 @@ module.exports = {
         embeds: [buildEmbed(
           '❌ Can\'t Register Birthday', 
           'Use this command in the server!', 0xed4245)],
-        ephemeral: true,
       });
       return;
     }
@@ -157,7 +154,6 @@ module.exports = {
               0xed4245
             ),
           ],
-          ephemeral: true,
         });
         return;
       }
@@ -186,7 +182,6 @@ module.exports = {
             0x57f287
           ),
         ],
-        ephemeral: true,
       });
       return;
     }
@@ -196,7 +191,8 @@ module.exports = {
         await interaction.reply({
           embeds: [buildEmbed(
             '❌ Missing Permission', 
-            'You need to be a **Moderator** to use `/birthday remove`', 0xed4245)],
+            'You need to be a **Moderator** to use `/birthday remove`', 0xed4245)
+          ],
           ephemeral: true,
         });
         return;
