@@ -28,7 +28,7 @@ function getFooterText() {
   const day = now.getDate();
   const year = now.getFullYear();
 
-  return `Birthdays • ${monthName} ${ordinal(day)}, ${year}`;
+  return `Birthdays by CCB • ${monthName} ${ordinal(day)}, ${year}`;
 }
 
 function ordinal(n) {
@@ -53,6 +53,25 @@ function buildEmbed(title, description, color = 0x1F69FF) {
     .setDescription(description)
     .setColor(color)
     .setFooter({ text: getFooterText() });
+}
+
+async function upsertBirthday({ userId, guildId, month, day }) {
+  await Birthday.findOneAndUpdate(
+    {
+      userId,
+      guildId,
+    },
+    {
+      month,
+      day,
+      lastAnnouncedYear: null,
+    },
+    {
+      upsert: true,
+      new: true,
+      setDefaultsOnInsert: true,
+    }
+  );
 }
 
 module.exports = {
@@ -158,21 +177,12 @@ module.exports = {
         return;
       }
 
-      await Birthday.findOneAndUpdate(
-        {
-          userId: interaction.user.id,
-          guildId: interaction.guild.id,
-        },
-        {
-          month,
-          day,
-        },
-        {
-          upsert: true,
-          new: true,
-          setDefaultsOnInsert: true,
-        }
-      );
+      await upsertBirthday({
+        userId: interaction.user.id,
+        guildId: interaction.guild.id,
+        month,
+        day,
+      });
 
       await interaction.reply({
         embeds: [
@@ -278,7 +288,7 @@ if (subcommand === 'list') {
         return;
       }
 
-      const user = interaction.options.getUser('user');
+      const targetUser = interaction.options.getUser('user', true);
       const month = interaction.options.getInteger('month');
       const day = interaction.options.getInteger('day');
 
@@ -296,27 +306,18 @@ if (subcommand === 'list') {
         return;
       }
 
-      await Birthday.findOneAndUpdate(
-        {
-          userId: user.id,
-          guildId: interaction.guild.id,
-        },
-        {
-          month,
-          day,
-        },
-        {
-          upsert: true,
-          new: true,
-          setDefaultsOnInsert: true,
-        }
-      );
+      await upsertBirthday({
+        userId: targetUser.id,
+        guildId: interaction.guild.id,
+        month,
+        day,
+      });
 
       await interaction.reply({
         embeds: [
           buildEmbed(
             '✅ Birthday Updated',
-            `Updated ${user}'s birthday to **${formatBirthday(month, day)}**.`,
+            `Updated ${targetUser}'s birthday to **${formatBirthday(month, day)}**.`,
             0x57f287
           ),
         ],

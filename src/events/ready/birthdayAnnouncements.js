@@ -20,6 +20,22 @@ function getBirthdayDateQuery(month, day, currentYear) {
   return dateChecks;
 }
 
+function getFooterText() {
+  const now = new Date();
+
+  const monthName = now.toLocaleString('en-US', { month: 'long' });
+  const day = now.getDate();
+  const year = now.getFullYear();
+
+  return `Birthdays by CCB • ${monthName} ${ordinal(day)}, ${year}`;
+}
+
+function ordinal(n) {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
+}
+
 function getTodayDateChecks(now) {
   const localYear = now.getFullYear();
   const utcYear = now.getUTCFullYear();
@@ -135,9 +151,9 @@ async function processBirthdayAnnouncements(client, source = 'scheduled') {
 
       const birthdayEmbed = new EmbedBuilder()
         .setColor(0x1F69FF)
-        .setTitle('🎂 Happy Birthday!')
-        .setDescription(`Everyone wish <@${birthday.userId}> a happy birthday! 🎉`)
-        .setTimestamp();
+        .setTitle(`Happy Birthday! 🎂`)
+        .setDescription(`Everyone wish <@${birthday.userId}> a happy birthday!`)
+        .setFooter({ text: getFooterText() });
 
       if (avatarUrl) {
         birthdayEmbed.setThumbnail(avatarUrl);
