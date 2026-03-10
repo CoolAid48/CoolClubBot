@@ -1,5 +1,4 @@
 require('dotenv').config();
-
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const mongoose = require('mongoose');
 

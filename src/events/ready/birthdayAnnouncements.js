@@ -2,7 +2,8 @@ const { EmbedBuilder } = require('discord.js');
 const Birthday = require('../../models/Birthday');
 const BirthdaySettings = require('../../models/BirthdaySettings');
 
-const BIRTHDAY_CHECK = 60 * 60000; // checks hourly for new birthdays
+const BIRTHDAY_ANNOUNCEMENT_HOUR_UTC = 5; // 5 AM UTC, 12 AM EST, 9 PM PST
+const BIRTHDAY_ANNOUNCEMENT_INTERVAL = 24 * 60 * 60000;
 const BIRTHDAY_CHANNEL_ID = '1288283039146967111';
 
 function isLeapYear(year) {
@@ -37,26 +38,23 @@ function ordinal(n) {
 }
 
 function getTodayDateChecks(now) {
-  const localYear = now.getFullYear();
   const utcYear = now.getUTCFullYear();
 
-  const dates = [
-    ...getBirthdayDateQuery(now.getMonth() + 1, now.getDate(), localYear),
-    ...getBirthdayDateQuery(now.getUTCMonth() + 1, now.getUTCDate(), utcYear),
-  ];
+  return {
+    dates: getBirthdayDateQuery(now.getUTCMonth() + 1, now.getUTCDate(), utcYear),
+    years: [utcYear],
+  };
+}
 
-  const uniqueDates = [];
+function getMsUntilNextUtcHour(targetHourUtc, now = new Date()) {
+  const nextRun = new Date(now);
+  nextRun.setUTCHours(targetHourUtc, 0, 0, 0);
 
-  for (const date of dates) {
-    if (!uniqueDates.some((item) => item.month === date.month && item.day === date.day)) {
-      uniqueDates.push(date);
-    }
+  if (nextRun <= now) {
+    nextRun.setUTCDate(nextRun.getUTCDate() + 1);
   }
 
-  return {
-    dates: uniqueDates,
-    years: [...new Set([localYear, utcYear])],
-  };
+  return nextRun.getTime() - now.getTime();
 }
 
 async function resolveBirthdayChannel(client, guildId, fallbackChannelId = BIRTHDAY_CHANNEL_ID) {
@@ -161,7 +159,7 @@ async function processBirthdayAnnouncements(client, source = 'scheduled') {
 
       await birthdayChannel.send({ embeds: [birthdayEmbed] });
 
-      birthday.lastAnnouncedYear = now.getFullYear();
+      birthday.lastAnnouncedYear = now.getUTCFullYear();
       await birthday.save();
       sentCount += 1;
     } catch (error) {
@@ -176,9 +174,19 @@ async function processBirthdayAnnouncements(client, source = 'scheduled') {
 }
 
 module.exports = async (client) => {
-  setInterval(() => {
+  const runScheduledBirthdayCheck = () => {
     processBirthdayAnnouncements(client, 'scheduled').catch((error) => {
       console.log(`Scheduled birthday announcement check failed: ${error}`);
     });
-  }, BIRTHDAY_CHECK);
+  };
+
+  const initialDelay = getMsUntilNextUtcHour(BIRTHDAY_ANNOUNCEMENT_HOUR_UTC);
+
+  setTimeout(() => {
+    runScheduledBirthdayCheck();
+
+    setInterval(() => {
+      runScheduledBirthdayCheck();
+    }, BIRTHDAY_ANNOUNCEMENT_INTERVAL);
+  }, initialDelay);
 };

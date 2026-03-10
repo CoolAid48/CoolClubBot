@@ -16,9 +16,18 @@ const MONTH_CHOICES = [
   { name: '12 - December', value: 12 },
 ];
 
-function daysInMonth(month) {
-  // Use 2024 as the reference so Feb 29 can be registered since it's a leap year
-  return new Date(2024, month, 0).getDate();
+function daysInMonth(month, year = 2024) {
+  return new Date(year, month, 0).getDate();
+}
+
+function maxBirthdayDay(month) {
+  // Use a leap year so Feb 29 can be registered.
+  return daysInMonth(month, 2024);
+}
+
+function maxDisplayedMonthDays(month) {
+  // Use a non-leap year for February to show 28 days in the error message, since we allow 29th birthdays to be registered on the 28th on non-leap years.
+  return daysInMonth(month, 2023);
 }
 
 function getFooterText() {
@@ -164,12 +173,31 @@ module.exports = {
       const month = interaction.options.getInteger('month');
       const day = interaction.options.getInteger('day');
 
-      if (day > daysInMonth(month)) {
+      const existingBirthday = await Birthday.findOne({
+        userId: interaction.user.id,
+        guildId: interaction.guild.id,
+      });
+
+      if (existingBirthday) {
+        await interaction.reply({
+          embeds: [
+            buildEmbed(
+              '❌ Birthday Already Registered',
+              'Your birthday is already registered. Please ask a moderator to remove it before registering again.',
+              0xed4245
+            ),
+          ],
+          ephemeral: true,
+        });
+        return;
+      }
+
+      if (day > maxBirthdayDay(month)) {
         await interaction.reply({
           embeds: [
             buildEmbed(
               '❌ Invalid Date',
-              `That date is invalid. **${getMonthName(month)}** only has **${daysInMonth(month)}** days!`,
+              `That date is invalid. **${getMonthName(month)}** only has **${maxDisplayedMonthDays(month)}** days!`,
               0xed4245
             ),
           ],
@@ -292,12 +320,12 @@ if (subcommand === 'list') {
       const month = interaction.options.getInteger('month');
       const day = interaction.options.getInteger('day');
 
-      if (day > daysInMonth(month)) {
+      if (day > maxBirthdayDay(month)) {
         await interaction.reply({
           embeds: [
             buildEmbed(
               '❌ Invalid Date',
-              `That date is invalid. **${getMonthName(month)}** only has **${daysInMonth(month)}** days!`,
+              `That date is invalid. **${getMonthName(month)}** only has **${maxDisplayedMonthDays(month)}** days!`,
               0xed4245
             ),
           ],
