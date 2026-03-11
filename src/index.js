@@ -25,6 +25,9 @@ const client = new Client({
 
 (async () => {
   try {
+    await client.login(process.env.TOKEN);
+    console.log(`✅ ${client.user.username} is online.`);
+    
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('🛜  Connected to database!');
 
@@ -34,9 +37,6 @@ const client = new Client({
     registerMessageReplies(client);
     registerStarboard(client);
     registerTerminalMessenger(client);
-
-    await client.login(process.env.TOKEN);
-    console.log(`✅ ${client.user.username} is online.`);
 
     const guild = client.guilds.cache.get(process.env.GUILD_ID);
     if (!guild) {
