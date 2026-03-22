@@ -22,7 +22,8 @@
   - !modrinth: Replies with a link to Modrinth
   - !mods: Replies with a link to Coolaid's mods list
   - !ping: Replies with "Pong!" and the bot's ping
-  - !rules: Replies with a reminder to check out the rules channel
+  - !rules: Replies with the Discord server rules list
+  - !socials: Replies with CoolAid's website and social media links
   - !specs: Replies with a link to Coolaid's setup and specs list
   - !support: Replies with a link to the ticket channel for support
   - !website: Replies with a link to CoolAid's website home page

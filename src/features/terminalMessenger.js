@@ -2,7 +2,7 @@ const readline = require('readline');
 const { ChannelType } = require('discord.js');
 
 // SEND MESSAGES AS THE BOT
-const BOT_CHANNEL_ID = '947979392708149319';
+const BOT_CHANNEL_ID = '883363142204293152';
 
 /*
 staff-lounge    919278682806296596
