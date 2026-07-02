@@ -26,15 +26,33 @@ module.exports = (client) => {
   const eventFolders = getAllFiles(path.join(__dirname, '..', 'events'), true);
 
   for (const eventFolder of eventFolders) {
+    const folderName = eventFolder.replace(/\\/g, '/').split('/').pop();
+
+    if (folderName === 'ticketLogs') {
+      const ticketEventFiles = getAllFiles(eventFolder);
+      ticketEventFiles.sort();
+
+      for (const ticketEventFile of ticketEventFiles) {
+        const eventName = path.parse(ticketEventFile).name;
+
+        client.on(eventName, async (...args) => {
+          const eventFunction = require(ticketEventFile);
+          await eventFunction(client, ...args);
+        });
+      }
+
+      continue;
+    }
+
     const eventFiles = getFilesRecursively(eventFolder);
     eventFiles.sort();
 
-    const eventName = eventFolder.replace(/\\/g, '/').split('/').pop();
+    const eventName = folderName;
 
-    client.on(eventName, async (arg) => {
+    client.on(eventName, async (...args) => {
       for (const eventFile of eventFiles) {
         const eventFunction = require(eventFile);
-        await eventFunction(client, arg);
+        await eventFunction(client, ...args);
       }
     });
   }

@@ -28,7 +28,7 @@ function getFooterText() {
   const day = now.getDate();
   const year = now.getFullYear();
 
-  return `Birthdays by CCB • ${monthName} ${ordinal(day)}, ${year}`;
+  return `CoolAid's Club • Birthdays • ${monthName} ${ordinal(day)}, ${year}`;
 }
 
 function ordinal(n) {

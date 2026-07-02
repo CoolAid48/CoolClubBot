@@ -12,9 +12,11 @@
 
 - Simple message command where typing "hello" will prompt the bot to respond with a little message!
 
-- Autorole logic for users to get a temporary "LIVE NOW" role and get displayed towards the top of the members list (free self-promo) when streaming on Twitch
+- Autorole logic for users to get a temporary "LIVE NOW" role and get displayed towards the top of the members list (free self-promo) when streaming on Twitch.
 
-- "Starboard" system where highly reacted messages will get "pinned" in an embed format in the #collard-board channel for all to see. We call this the collard board.
+- Live notification system that checks when CoolAid goes live and posts a stream notification embed.
+
+- "Starboard" system where highly reacted messages will get "pinned" in an embed format in the #collard-board channel for all to see. We call this the collard board. The embed links back to the original message, shows the original channel, displays the total reaction count with the coolai2Collard emote, and updates as reactions increase.
 
 - Various prefix commands using the (!) prefix for CCB to respond to. Full list of commands and their uses below!
  

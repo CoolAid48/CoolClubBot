@@ -4,24 +4,20 @@ const { ActivityType } = require('discord.js');
 module.exports = (client) => {
   const statuses = [
     {
-      name: '24/7 CoolAid VODs',
-      type: ActivityType.Streaming,
-      url: 'https://www.twitch.tv/coolaid48',
+      name: 'Streaming 24/7 CoolAid VODs',
+      type: ActivityType.Custom,
     },
     {
       name: 'Mod of the Month',
-      type: ActivityType.Streaming,
-      url: 'https://www.twitch.tv/coolaid48',
+      type: ActivityType.Custom,
     },
     {
       name: 'Watching over the CoolClub',
-      type: ActivityType.Streaming,
-      url: 'https://www.twitch.tv/coolaid48',
+      type: ActivityType.Custom,
     },
     {
-      name: 'Shorter than Linkzzey',
-      type: ActivityType.Streaming,
-      url: 'https://www.twitch.tv/coolaid48',
+      name: 'Taller than CoolAid',
+      type: ActivityType.Custom,
     },
   ];
 

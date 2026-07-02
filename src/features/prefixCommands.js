@@ -16,6 +16,12 @@ module.exports = (client) => {
     client.prefix.set(command.name, command);
   }
 
+  if (client.prefixCommandsRegistered) {
+    return;
+  }
+
+  client.prefixCommandsRegistered = true;
+
   client.on('messageCreate', async (message) => {
     const prefix = '!';
 

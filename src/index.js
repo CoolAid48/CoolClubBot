@@ -9,17 +9,18 @@ const registerMessageReplies = require('./features/messageReplies');
 const startBotStatus = require('./features/botStatus');
 const registerTerminalMessenger = require('./features/terminalMessenger');
 const registerStarboard = require('./features/starboard');
+const registerLiveNotifications = require('./features/liveNotifications');
 
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildModeration,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildMessageReactions,
   ],
-  disableEveryone: true,
   partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 });
 
@@ -34,6 +35,7 @@ const client = new Client({
     registerMessageReplies(client);
     registerStarboard(client);
     registerTerminalMessenger(client);
+    registerLiveNotifications(client);
 
     await client.login(process.env.TOKEN);
     console.log(`✅ ${client.user.username} is online.`);

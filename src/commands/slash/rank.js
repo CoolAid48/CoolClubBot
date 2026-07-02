@@ -1,4 +1,4 @@
-const { AttachmentBuilder } = require('discord.js');
+const { AttachmentBuilder, MessageFlags } = require('discord.js');
 const canvacord = require('canvacord');
 const calculateLevelXp = require('../../utils/calculateLevelXp');
 const Level = require('../../models/Level');
@@ -11,7 +11,7 @@ module.exports = {
     if (!interaction.inGuild()) {
       await interaction.reply({
         content: 'You can only run this command inside a server.',
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -26,7 +26,7 @@ module.exports = {
     if (!fetchedLevel) {
       await interaction.reply({
         content: "You don't have any levels yet. Chat a little more and try again.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }

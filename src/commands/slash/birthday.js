@@ -1,4 +1,4 @@
-const { ApplicationCommandOptionType, PermissionFlagsBits, EmbedBuilder, } = require('discord.js');
+const { ApplicationCommandOptionType, PermissionFlagsBits, EmbedBuilder, MessageFlags, } = require('discord.js');
 const Birthday = require('../../models/Birthday');
 
 const MONTH_CHOICES = [
@@ -187,7 +187,7 @@ module.exports = {
               0xed4245
             ),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -231,7 +231,7 @@ module.exports = {
             '❌ Missing Permission', 
             'You need to be a **Moderator** to use `/birthday remove`', 0xed4245)
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -248,7 +248,7 @@ module.exports = {
             ? buildEmbed('🗑️ Birthday Removed', `Removed ${user}'s registered birthday`, 0x57f287)
             : buildEmbed('❌ Birthday Not Found', `${user} does not have a registered birthday to remove`, 0xed4245),
         ],
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -311,7 +311,7 @@ if (subcommand === 'list') {
           embeds: [buildEmbed(
             '❌ Missing Permission', 
             'You need to be a **Moderator** to use `/birthday update`', 0xed4245)],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
@@ -329,7 +329,7 @@ if (subcommand === 'list') {
               0xed4245
             ),
           ],
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
         return;
       }
