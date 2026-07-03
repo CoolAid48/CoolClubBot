@@ -1,4 +1,4 @@
-const EMOJI = '1337589969526722693';
+const EMOJI = '1522378871729684560';
 const COLLARD_EMOJI = `<:coolai2Collard:${EMOJI}>`;
 const THRESHOLD = 3;
 const STARBOARD_CHANNEL_ID = '1340016566296776728';
@@ -41,7 +41,7 @@ function buildStarboardEmbed(message) {
       },
       {
         name: `${COLLARD_EMOJI} ${getTotalReactionCount(message)}`,
-        value: 'Total reactions',
+        value: '\u200b',
         inline: true,
       },
     ],

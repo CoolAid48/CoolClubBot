@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const LiveNotification = require('../models/LiveNotification');
 
 const LIVE_USERNAME = 'CoolAid48';
-const ANNOUNCEMENT_CHANNEL_ID = '1291519148958158848'; //#stream-notifs 898921447320334396
+const ANNOUNCEMENT_CHANNEL_ID = '898921447320334396';
 const PING_ROLE_ID = '1059659428896456777';
 const POLL_INTERVAL_MS = 2 * 60 * 1000;
 const LIVE_COLOR = 0x9146ff;
