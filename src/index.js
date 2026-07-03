@@ -27,7 +27,7 @@ const client = new Client({
 (async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('🛜  Connected to database!');
+    console.log('🛜 Connected to database!');
 
     eventHandler(client);
     registerPrefixCommands(client);

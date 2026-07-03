@@ -1,5 +1,6 @@
 const EMOJI = '1522378871729684560';
-const COLLARD_EMOJI = `<:coolai2Collard:${EMOJI}>`;
+const COLLARD_EMOJI_NAME = 'coolai2Collard';
+const COLLARD_EMOJI = `<:${COLLARD_EMOJI_NAME}:${EMOJI}>`;
 const THRESHOLD = 3;
 const STARBOARD_CHANNEL_ID = '1340016566296776728';
 
@@ -21,11 +22,15 @@ function getMessageUrl(message) {
   return `https://discord.com/channels/${message.guild.id}/${message.channel.id}/${message.id}`;
 }
 
-function getTotalReactionCount(message) {
-  return message.reactions.cache.reduce((total, messageReaction) => total + messageReaction.count, 0);
+function isCollardEmoji(emoji) {
+  return emoji.id === EMOJI || (!emoji.id && emoji.name === COLLARD_EMOJI_NAME);
 }
 
-function buildStarboardEmbed(message) {
+function getCollardReactionCount(message) {
+  return message.reactions.cache.find((messageReaction) => isCollardEmoji(messageReaction.emoji))?.count ?? 0;
+}
+
+function buildStarboardEmbed(message, footerText = getFooterText()) {
   const messageUrl = getMessageUrl(message);
   const embed = {
     color: 0x0070e9,
@@ -37,16 +42,11 @@ function buildStarboardEmbed(message) {
     fields: [
       {
         name: `From: ${message.channel}`,
-        value: `[Go to message](${messageUrl})`,
-      },
-      {
-        name: `${COLLARD_EMOJI} ${getTotalReactionCount(message)}`,
-        value: '\u200b',
-        inline: true,
+        value: `[Go to message](${messageUrl})\n\n**${COLLARD_EMOJI} ${getCollardReactionCount(message)}**`,
       },
     ],
     footer: {
-      text: getFooterText(),
+      text: footerText,
     },
   };
 
@@ -73,7 +73,7 @@ module.exports = (client) => {
 
     const { message, emoji } = reaction;
 
-    if (emoji.name !== EMOJI && emoji.id !== EMOJI) {
+    if (!isCollardEmoji(emoji)) {
       return;
     }
 
@@ -97,7 +97,7 @@ module.exports = (client) => {
     );
 
     if (existingMessage) {
-      await existingMessage.edit({ embeds: [buildStarboardEmbed(message)] });
+      await existingMessage.edit({ embeds: [buildStarboardEmbed(message, existingMessage.embeds[0].footer?.text)] });
       return;
     }
 
