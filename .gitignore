@@ -1,5 +1,4 @@
-.vscode
+.agents
 .env
-config.json
+.vscode
 node_modules
-Dockerfile

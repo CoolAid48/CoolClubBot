@@ -1,59 +1,42 @@
 const path = require('path');
 const fs = require('fs');
-const getAllFiles = require('../utils/getAllFiles');
+const { Events } = require('discord.js');
 
-function getFilesRecursively(directory) {
-  const directoryEntries = fs.readdirSync(directory, { withFileTypes: true });
-  const files = [];
+function getEventFiles(directory) {
+  return fs.readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const entryPath = path.join(directory, entry.name);
 
-  for (const entry of directoryEntries) {
-    const entryPath = path.join(directory, entry.name);
+      if (entry.isDirectory()) {
+        return getEventFiles(entryPath);
+      }
 
-    if (entry.isDirectory()) {
-      files.push(...getFilesRecursively(entryPath));
-      continue;
-    }
-
-    if (entry.isFile()) {
-      files.push(entryPath);
-    }
-  }
-
-  return files;
+      return entry.isFile() && entry.name.endsWith('.js') ? [entryPath] : [];
+    });
 }
 
 module.exports = (client) => {
-  const eventFolders = getAllFiles(path.join(__dirname, '..', 'events'), true);
+  const eventsPath = path.join(__dirname, '..', 'events');
+  const eventFiles = getEventFiles(eventsPath).sort();
 
-  for (const eventFolder of eventFolders) {
-    const folderName = eventFolder.replace(/\\/g, '/').split('/').pop();
+  for (const eventFile of eventFiles) {
+    const eventName = path.parse(eventFile).name;
+    const eventFunction = require(eventFile);
+    const register = eventName === Events.ClientReady ? 'once' : 'on';
+    const eventLabel = path.relative(eventsPath, eventFile);
 
-    if (folderName === 'ticketLogs') {
-      const ticketEventFiles = getAllFiles(eventFolder);
-      ticketEventFiles.sort();
-
-      for (const ticketEventFile of ticketEventFiles) {
-        const eventName = path.parse(ticketEventFile).name;
-
-        client.on(eventName, async (...args) => {
-          const eventFunction = require(ticketEventFile);
-          await eventFunction(client, ...args);
-        });
-      }
-
-      continue;
+    if (typeof eventFunction !== 'function') {
+      throw new TypeError(`Invalid event module: ${eventLabel}`);
     }
 
-    const eventFiles = getFilesRecursively(eventFolder);
-    eventFiles.sort();
-
-    const eventName = folderName;
-
-    client.on(eventName, async (...args) => {
-      for (const eventFile of eventFiles) {
-        const eventFunction = require(eventFile);
-        await eventFunction(client, ...args);
-      }
+    client[register](eventName, (...args) => {
+      Promise.resolve()
+        .then(() => eventFunction(client, ...args))
+        .catch((error) => {
+          console.error(`[events] ${eventName} failed in ${eventLabel}:`, error);
+        });
     });
   }
 };
+
+module.exports.getEventFiles = getEventFiles;

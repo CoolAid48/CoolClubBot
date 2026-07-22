@@ -1,5 +1,6 @@
 const { ApplicationCommandOptionType, PermissionFlagsBits, EmbedBuilder, MessageFlags, } = require('discord.js');
 const Birthday = require('../../models/Birthday');
+const { ordinal } = require('../../utils/formatting');
 
 const MONTH_CHOICES = [
   { name: '1 - January', value: 1 },
@@ -30,22 +31,6 @@ function maxDisplayedMonthDays(month) {
   return daysInMonth(month, 2023);
 }
 
-function getFooterText() {
-  const now = new Date();
-
-  const monthName = now.toLocaleString('en-US', { month: 'long' });
-  const day = now.getDate();
-  const year = now.getFullYear();
-
-  return `Birthdays by CCB • ${monthName} ${ordinal(day)}, ${year}`;
-}
-
-function ordinal(n) {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
-}
-
 function getMonthName(month) {
   return new Date(2024, month - 1, 1).toLocaleString('en-US', {
     month: 'long',
@@ -61,7 +46,8 @@ function buildEmbed(title, description, color = 0x1F69FF) {
     .setTitle(title)
     .setDescription(description)
     .setColor(color)
-    .setFooter({ text: getFooterText() });
+    .setFooter({ text: 'Birthdays' })
+    .setTimestamp();
 }
 
 async function upsertBirthday({ userId, guildId, month, day }) {

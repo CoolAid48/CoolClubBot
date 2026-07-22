@@ -1,6 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
-const Birthday = require('../../models/Birthday');
-const BirthdaySettings = require('../../models/BirthdaySettings');
+const Birthday = require('../models/Birthday');
+const BirthdaySettings = require('../models/BirthdaySettings');
 
 const BIRTHDAY_ANNOUNCEMENT_HOUR_UTC = 5; // 5 AM UTC, 12 AM EST, 9 PM PST
 const BIRTHDAY_ANNOUNCEMENT_INTERVAL = 24 * 60 * 60000;
@@ -19,22 +19,6 @@ function getBirthdayDateQuery(month, day, currentYear) {
   }
 
   return dateChecks;
-}
-
-function getFooterText() {
-  const now = new Date();
-
-  const monthName = now.toLocaleString('en-US', { month: 'long' });
-  const day = now.getDate();
-  const year = now.getFullYear();
-
-  return `CoolAid's Club • Birthdays • ${monthName} ${ordinal(day)}, ${year}`;
-}
-
-function ordinal(n) {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
 }
 
 function getTodayDateChecks(now) {
@@ -151,7 +135,8 @@ async function processBirthdayAnnouncements(client, source = 'scheduled') {
         .setColor(0x1F69FF)
         .setTitle(`Happy Birthday! 🎂`)
         .setDescription(`Everyone wish <@${birthday.userId}> a happy birthday!`)
-        .setFooter({ text: getFooterText() });
+        .setFooter({ text: 'Birthdays' })
+        .setTimestamp(now);
 
       if (avatarUrl) {
         birthdayEmbed.setThumbnail(avatarUrl);

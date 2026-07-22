@@ -68,11 +68,12 @@ function buildBanLogEmbed({
     .setTitle(title)
     .setDescription([
       `**Offender:** ${formatUser(resolvedOffender)}`,
+      `**User ID:** ${resolvedOffender?.id || 'Unknown'}`,
       `**Reason:** ${resolveReason(auditLogEntry, ban, reason)}`,
       `**Handled by:** ${resolvedModerator ? getUserName(resolvedModerator) : 'Unknown moderator'}`,
     ].join('\n'))
-    .setFooter({ text: `ID: ${resolvedOffender?.id || 'Unknown'}` })
-    .setTimestamp(new Date());
+    .setFooter({ text: 'Moderation Logs' })
+    .setTimestamp();
 }
 
 module.exports = {

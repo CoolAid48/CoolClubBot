@@ -2,8 +2,8 @@ const { sendTicketLog } = require('../../utils/ticketLogs');
 
 module.exports = async (client, channel) => {
   try {
-    await sendTicketLog(client, channel, 'Deleted');
+    await sendTicketLog(client, channel, 'Created');
   } catch (error) {
-    console.error('Error in channelDelete ticket log:', error);
+    console.error('Error in channelCreate ticket log:', error);
   }
 };

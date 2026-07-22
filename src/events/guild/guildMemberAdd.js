@@ -1,8 +1,11 @@
+const WELCOME_ROLE_ID = '919711530428289064';
+const WELCOME_CHANNEL_ID = '883375089045889075';
+
 module.exports = async (client, member) => {
     try {
         console.log(`New member joined: ${member.user.tag}`);
         
-        const welcomeRole = member.guild.roles.cache.find(role => role.id === '919711530428289064');
+        const welcomeRole = member.guild.roles.cache.get(WELCOME_ROLE_ID);
         
         if (!welcomeRole) {
             console.error('Welcome role not found!');
@@ -12,7 +15,7 @@ module.exports = async (client, member) => {
         await member.roles.add(welcomeRole);
         console.log(`Added role to ${member.user.tag}`);
         
-        const welcomeChannel = member.guild.channels.cache.find(channel => channel.id === '883375089045889075');
+        const welcomeChannel = member.guild.channels.cache.get(WELCOME_CHANNEL_ID);
         
         if (!welcomeChannel) {
             console.error('Welcome channel not found!');

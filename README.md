@@ -14,9 +14,9 @@
 
 - Autorole logic for users to get a temporary "LIVE NOW" role and get displayed towards the top of the members list (free self-promo) when streaming on Twitch.
 
-- Live notification system that checks when CoolAid goes live and posts a stream notification embed.
+- Twitch EventSub live notification system that reacts to API events, refreshes and persists OAuth tokens, and posts the Discord embed with Twitch metadata
 
-- "Starboard" system where highly reacted messages will get "pinned" in an embed format in the #collard-board channel for all to see. We call this the collard board. The embed links back to the original message, shows the original channel, displays the total reaction count with the coolai2Collard emote, and updates as reactions increase.
+- Fridge Board system where highly reacted messages are preserved in an embed for everyone to see. The embed links to the original message, shows its channel and reaction count, and updates as reactions increase.
 
 - Various prefix commands using the (!) prefix for CCB to respond to. Full list of commands and their uses below!
  
@@ -31,5 +31,7 @@
   - !website: Replies with a link to CoolAid's website home page
 
 - Complete birthday system where users can register their birthday with `/birthday register` and see all added birthdays in the server with `/birthday list`!
+
+- Moderator-only `/say` command for sending a message through the bot without using the host terminal.
 
 - XP leveling system where users gain xp for chatting in select server channels and get a level up notification in the #xp-leveling channel. User's can see their rank with `/rank`.

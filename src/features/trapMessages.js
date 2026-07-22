@@ -1,4 +1,4 @@
-const { getTrapSettings } = require('../../utils/trapSettings');
+const { getTrapSettings } = require('../utils/trapSettings');
 const pendingBans = new Set();
 
 module.exports = async (client, message) => {

@@ -3,12 +3,10 @@ const { Client, GatewayIntentBits, Partials } = require('discord.js');
 const mongoose = require('mongoose');
 
 const eventHandler = require('./handlers/eventHandler');
-const registerPrefixCommands = require('./features/prefixCommands');
-const registerPresenceLiveRole = require('./features/presenceLiveRole');
-const registerMessageReplies = require('./features/messageReplies');
+const registerSlashCommands = require('./handlers/slashCommandHandler');
+const registerPrefixCommands = require('./handlers/prefixCommandHandler');
 const startBotStatus = require('./features/botStatus');
-const registerTerminalMessenger = require('./features/terminalMessenger');
-const registerStarboard = require('./features/starboard');
+const registerFridgeBoard = require('./features/fridgeBoard');
 const registerLiveNotifications = require('./features/liveNotifications');
 
 const client = new Client({
@@ -31,23 +29,21 @@ const client = new Client({
 
     eventHandler(client);
     registerPrefixCommands(client);
-    registerPresenceLiveRole(client);
-    registerMessageReplies(client);
-    registerStarboard(client);
-    registerTerminalMessenger(client);
-    registerLiveNotifications(client);
+    registerFridgeBoard(client);
+    const syncSlashCommands = registerSlashCommands(client);
 
     await client.login(process.env.TOKEN);
     console.log(`✅ ${client.user.username} is online.`);
 
-    const guild = client.guilds.cache.get(process.env.GUILD_ID);
-    if (!guild) {
-      console.error('Guild not found');
-      return;
+    try {
+      await syncSlashCommands();
+    } catch (error) {
+      console.error('[commands] Failed to sync slash commands:', error);
     }
 
     startBotStatus(client);
+    registerLiveNotifications(client);
   } catch (error) {
-    console.error(`Startup error: ${error}`);
+    console.error('Startup error:', error);
   }
 })();

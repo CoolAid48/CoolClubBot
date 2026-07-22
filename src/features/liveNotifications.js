@@ -1,16 +1,25 @@
 const axios = require('axios');
 const { EmbedBuilder } = require('discord.js');
 const LiveNotification = require('../models/LiveNotification');
+const {
+  TwitchEventSubClient,
+  TwitchTokenManager,
+} = require('./twitchEventSub');
 
 const LIVE_USERNAME = 'CoolAid48';
 const ANNOUNCEMENT_CHANNEL_ID = '898921447320334396';
 const PING_ROLE_ID = '1059659428896456777';
-const POLL_INTERVAL_MS = 2 * 60 * 1000;
-const LIVE_COLOR = 0x9146ff;
+const FALLBACK_POLL_INTERVAL_MS = 30 * 1000;
+const TOKEN_VALIDATION_INTERVAL_MS = 60 * 60 * 1000;
+const EVENT_STREAM_RETRY_DELAYS_MS = [0, 1000, 2000];
+const TWITCH_REQUEST_TIMEOUT_MS = 5000;
+const LIVE_COLOR = 0x0257b3;
+const TWITCH_ICON_URL = 'https://img.icons8.com/color/96/twitch--v2.png';
+const TWITCH_CHANNEL_ICON_URL = process.env.TWITCH_CHANNEL_ICON_URL?.trim() || null;
 
 let cachedAccessToken = null;
 let cachedAccessTokenExpiresAt = 0;
-let isChecking = false;
+let liveWorkQueue = Promise.resolve();
 
 function getLiveUrl(username = LIVE_USERNAME) {
   return `https://www.twitch.tv/${username.toLowerCase()}`;
@@ -26,18 +35,14 @@ function getThumbnailUrl(stream) {
     .replace('{height}', '720');
 }
 
-function ordinal(n) {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return `${n}${s[(v - 20) % 10] || s[v] || s[0]}`;
-}
+function getBoxArtUrl(game) {
+  if (!game?.box_art_url) {
+    return null;
+  }
 
-function getFooterText(date = new Date()) {
-  const monthName = date.toLocaleString('en-US', { month: 'long' });
-  const day = date.getDate();
-  const year = date.getFullYear();
-
-  return `CoolAid's Club • Stream Notifs • ${monthName} ${ordinal(day)}, ${year}`;
+  return game.box_art_url
+    .replace('{width}', '144')
+    .replace('{height}', '192');
 }
 
 async function getTwitchAccessToken() {
@@ -55,8 +60,11 @@ async function getTwitchAccessToken() {
   }
 
   const response = await axios.post('https://id.twitch.tv/oauth2/token', null, {
+    timeout: TWITCH_REQUEST_TIMEOUT_MS,
     params: {
-      client_id: clientId, client_secret: clientSecret, grant_type: 'client_credentials',
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'client_credentials',
     },
   });
 
@@ -70,6 +78,7 @@ async function fetchLiveStream() {
   const accessToken = await getTwitchAccessToken();
 
   const response = await axios.get('https://api.twitch.tv/helix/streams', {
+    timeout: TWITCH_REQUEST_TIMEOUT_MS,
     params: {
       user_login: LIVE_USERNAME.toLowerCase(),
     },
@@ -82,6 +91,95 @@ async function fetchLiveStream() {
   return response.data.data?.[0] || null;
 }
 
+function buildStreamFromOnlineEvent(event) {
+  return {
+    id: event.id,
+    user_id: event.broadcaster_user_id,
+    user_login: event.broadcaster_user_login,
+    user_name: event.broadcaster_user_name,
+    type: event.type,
+    started_at: event.started_at,
+    title: null,
+    game_id: null,
+    game_name: null,
+    thumbnail_url: `https://static-cdn.jtvnw.net/previews-ttv/live_user_${event.broadcaster_user_login}-{width}x{height}.jpg`,
+  };
+}
+
+function wait(delayMs) {
+  return new Promise((resolve) => setTimeout(resolve, delayMs));
+}
+
+async function fetchStreamForOnlineEvent(event) {
+  for (const delayMs of EVENT_STREAM_RETRY_DELAYS_MS) {
+    if (delayMs) {
+      await wait(delayMs);
+    }
+
+    let stream;
+
+    try {
+      stream = await fetchLiveStream();
+    } catch {
+      return buildStreamFromOnlineEvent(event);
+    }
+
+    if (stream?.id === event.id) {
+      return stream;
+    }
+  }
+
+  return buildStreamFromOnlineEvent(event);
+}
+
+async function fetchTwitchUser(stream) {
+  const accessToken = await getTwitchAccessToken();
+  const userLogin = stream.user_login || LIVE_USERNAME.toLowerCase();
+  const hasUsableUserId = stream.user_id && stream.user_id !== '0';
+
+  const response = await axios.get('https://api.twitch.tv/helix/users', {
+    timeout: TWITCH_REQUEST_TIMEOUT_MS,
+    params: hasUsableUserId
+      ? { id: stream.user_id }
+      : { login: userLogin },
+    headers: {
+      'Client-ID': process.env.TWITCH_CLIENT_ID,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return response.data.data?.[0] || null;
+}
+
+async function fetchTwitchGame(stream) {
+  if (!stream.game_id) {
+    return null;
+  }
+
+  const accessToken = await getTwitchAccessToken();
+  const response = await axios.get('https://api.twitch.tv/helix/games', {
+    timeout: TWITCH_REQUEST_TIMEOUT_MS,
+    params: {
+      id: stream.game_id,
+    },
+    headers: {
+      'Client-ID': process.env.TWITCH_CLIENT_ID,
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  return response.data.data?.[0] || null;
+}
+
+async function fetchLiveEmbedMetadata(stream) {
+  const [user, game] = await Promise.all([
+    fetchTwitchUser(stream).catch(() => null),
+    fetchTwitchGame(stream).catch(() => null),
+  ]);
+
+  return { user, game };
+}
+
 async function resolveAnnouncementChannel(client) {
   const channel = await client.channels.fetch(ANNOUNCEMENT_CHANNEL_ID).catch(() => null);
 
@@ -92,28 +190,41 @@ async function resolveAnnouncementChannel(client) {
   return channel;
 }
 
-function buildLiveEmbed(stream) {
+function buildLiveEmbed(stream, metadata = {}) {
   const liveUrl = getLiveUrl(stream.user_login || LIVE_USERNAME);
+  const displayName = stream.user_name || LIVE_USERNAME;
   const thumbnailUrl = getThumbnailUrl(stream);
+  const boxArtUrl = getBoxArtUrl(metadata.game);
+  const author = {
+    name: displayName,
+    url: liveUrl,
+  };
+  const profileImageUrl = metadata.user?.profile_image_url || TWITCH_CHANNEL_ICON_URL;
+
+  if (profileImageUrl) {
+    author.iconURL = profileImageUrl;
+  }
 
   const embed = new EmbedBuilder()
     .setColor(LIVE_COLOR)
-    .setTitle(`${stream.user_name || LIVE_USERNAME} is live!`)
+    .setAuthor(author)
+    .setTitle(`${displayName} is now live on Twitch!`)
     .setURL(liveUrl)
-    .setDescription(stream.title || 'Come hang out on stream!')
-    .addFields(
-      {
-        name: 'Category',
-        value: stream.game_name || 'Just Chatting',
-        inline: true,
-      },
-      {
-        name: 'Watch',
-        value: `[Open Twitch](${liveUrl})`,
-        inline: true,
-      }
-    )
-    .setFooter({ text: getFooterText(stream.started_at ? new Date(stream.started_at) : new Date()) });
+    .setDescription(stream.title || `${displayName} is live!`)
+    .addFields({
+      name: 'Playing',
+      value: stream.game_name || 'Just Chatting',
+      inline: false,
+    })
+    .setFooter({
+      text: 'Twitch Streams',
+      iconURL: TWITCH_ICON_URL,
+    })
+    .setTimestamp(stream.started_at ? new Date(stream.started_at) : new Date());
+
+  if (boxArtUrl) {
+    embed.setThumbnail(boxArtUrl);
+  }
 
   if (thumbnailUrl) {
     embed.setImage(`${thumbnailUrl}?t=${Date.now()}`);
@@ -122,66 +233,107 @@ function buildLiveEmbed(stream) {
   return embed;
 }
 
-function buildLiveNotificationPayload(stream, options = {}) {
+async function buildLiveNotificationPayload(stream, options = {}) {
   const shouldPingRole = options.pingRole ?? true;
   const liveUrl = getLiveUrl(stream.user_login || LIVE_USERNAME);
+  const metadata = options.metadata ?? await fetchLiveEmbedMetadata(stream);
   const roleMention = shouldPingRole ? `<@&${PING_ROLE_ID}> ` : '';
 
   return {
-    content: `Hey ${roleMention} CoolAid is now live! \n${liveUrl} <:coolai2Hype:1494459960216653896> `,
-    embeds: [buildLiveEmbed(stream)],
+    content: `Hey ${roleMention}CoolAid is now live!\n${liveUrl} <:coolai2Hype:1494459960216653896>`,
+    embeds: [buildLiveEmbed(stream, metadata)],
     allowedMentions: {
       roles: shouldPingRole ? [PING_ROLE_ID] : [],
     },
   };
 }
 
-async function checkLiveStatus(client) {
-  if (isChecking) {
+async function announceLiveStream(client, stream) {
+  const username = LIVE_USERNAME.toLowerCase();
+  const notificationState = await LiveNotification.findOneAndUpdate(
+    { username },
+    { $setOnInsert: { username } },
+    {
+      returnDocument: 'after',
+      upsert: true,
+      setDefaultsOnInsert: true,
+    },
+  );
+
+  if (notificationState.lastStreamId === stream.id) {
     return;
   }
 
-  isChecking = true;
+  const channel = await resolveAnnouncementChannel(client);
 
-  try {
-    const stream = await fetchLiveStream();
-
-    if (!stream) {
-      return;
-    }
-
-    const username = LIVE_USERNAME.toLowerCase();
-    const notificationState = await LiveNotification.findOneAndUpdate(
-      { username },
-      { $setOnInsert: { username } },
-      {
-        new: true, upsert: true, setDefaultsOnInsert: true,
-      }
-    );
-
-    if (notificationState.lastStreamId === stream.id) {
-      return;
-    }
-
-    const channel = await resolveAnnouncementChannel(client);
-
-    if (!channel) {
-      console.error('[live] Announcement channel not found or unavailable.');
-      return;
-    }
-
-    await channel.send(buildLiveNotificationPayload(stream));
-
-    notificationState.lastStreamId = stream.id;
-    notificationState.lastAnnouncedAt = new Date();
-    await notificationState.save();
-
-    console.log(`[live] Announced stream ${stream.id} for ${LIVE_USERNAME}.`);
-  } catch (error) {
-    console.error(`[live] Failed to check live status: ${error.message}`);
-  } finally {
-    isChecking = false;
+  if (!channel) {
+    throw new Error('Announcement channel not found or unavailable');
   }
+
+  await channel.send(await buildLiveNotificationPayload(stream));
+
+  notificationState.lastStreamId = stream.id;
+  notificationState.lastAnnouncedAt = new Date();
+  await notificationState.save();
+
+  console.log(`[live] Announced stream ${stream.id} for ${LIVE_USERNAME}.`);
+}
+
+async function checkLiveStatus(client) {
+  const stream = await fetchLiveStream();
+
+  if (stream) {
+    await announceLiveStream(client, stream);
+  }
+}
+
+function enqueueLiveWork(label, work) {
+  liveWorkQueue = liveWorkQueue
+    .then(work)
+    .catch((error) => {
+      console.error(`[live] ${label}: ${error.message}`);
+    });
+
+  return liveWorkQueue;
+}
+
+async function startTwitchEventSub(client) {
+  const tokenManager = new TwitchTokenManager({
+    clientId: process.env.TWITCH_CLIENT_ID,
+    clientSecret: process.env.TWITCH_CLIENT_SECRET,
+    initialAccessToken: process.env.TWITCH_USER_ACCESS_TOKEN,
+    initialRefreshToken: process.env.TWITCH_REFRESH_TOKEN,
+    requestTimeoutMs: TWITCH_REQUEST_TIMEOUT_MS,
+  });
+
+  await tokenManager.getAccessToken();
+  const twitchUser = await fetchTwitchUser({ user_login: LIVE_USERNAME.toLowerCase() });
+
+  if (!twitchUser?.id) {
+    throw new Error(`Could not resolve Twitch user ID for ${LIVE_USERNAME}`);
+  }
+
+  const eventSub = new TwitchEventSubClient({
+    clientId: process.env.TWITCH_CLIENT_ID,
+    broadcasterUserId: twitchUser.id,
+    getAccessToken: () => tokenManager.getAccessToken(),
+    onStreamOnline: (event) => enqueueLiveWork(
+      'Failed to process EventSub stream.online event',
+      async () => announceLiveStream(client, await fetchStreamForOnlineEvent(event)),
+    ),
+  });
+
+  eventSub.start();
+
+  setInterval(() => {
+    tokenManager.getAccessToken().catch((error) => {
+      console.error(`[live:eventsub] Twitch token validation failed: ${error.message}`);
+
+      if (error.response?.status === 400 || error.response?.status === 401) {
+        eventSub.stop();
+      }
+    });
+  }, TOKEN_VALIDATION_INTERVAL_MS);
 }
 
 function registerLiveNotifications(client) {
@@ -191,14 +343,23 @@ function registerLiveNotifications(client) {
   }
 
   setTimeout(() => {
-    checkLiveStatus(client);
+    enqueueLiveWork('Failed to check live status', () => checkLiveStatus(client));
+
+    startTwitchEventSub(client).catch((error) => {
+      console.error(`[live:eventsub] Could not start EventSub: ${error.message}`);
+      console.log('[live] Continuing with 30-second polling fallback.');
+    });
+
     setInterval(() => {
-      checkLiveStatus(client);
-    }, POLL_INTERVAL_MS);
+      enqueueLiveWork('Failed to check live status', () => checkLiveStatus(client));
+    }, FALLBACK_POLL_INTERVAL_MS);
   }, 10000);
 }
 
 module.exports = registerLiveNotifications;
 module.exports.buildLiveNotificationPayload = buildLiveNotificationPayload;
-module.exports.resolveAnnouncementChannel = resolveAnnouncementChannel;
+module.exports.buildStreamFromOnlineEvent = buildStreamFromOnlineEvent;
+module.exports.fetchLiveEmbedMetadata = fetchLiveEmbedMetadata;
 module.exports.LIVE_USERNAME = LIVE_USERNAME;
+module.exports.resolveAnnouncementChannel = resolveAnnouncementChannel;
+module.exports.startTwitchEventSub = startTwitchEventSub;
